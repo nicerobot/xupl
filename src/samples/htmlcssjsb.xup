@@ -1,0 +1,20 @@
+html lang en
+  head
+    title|"&{pageTitle}"
+    style@text/css
+      #header
+        h1 font-size 26px, font-weight bold
+        p font-size 12px, &{#footer}
+          a text-decoration none
+            &{this}:hover border-width 1px, &{#header.h1}
+
+    script@text/javascript
+      if (foo) {
+         bar()
+      }
+
+  body
+    h1|"Xupl - template engine"
+    div#header
+      if@tup isXupl:p@html| "Xupl is amazing"
+      else@tup| p@html "Get on it!"
