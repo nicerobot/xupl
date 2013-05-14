@@ -27,40 +27,7 @@ static regex_t re_word;
 #define IF(x) if IS(x)
 #define ELIF(x) else IF(x)
 
-int main (int argc, char **argv) {
-
-	int atty = isatty(0);
-	if (argc <= 1 && atty) return 1;
-
-	const char* FILENAME = argv[1];
-
-	if (regcomp(&re_word, "^[:_A-Za-z][:_A-Za-z0-9.-]*", REG_EXTENDED)) {
-		err(1, "Could not compile regex\n");
-		return 1;
-	}
-
-	FILE* in = NULL;
-	int fd = -1;
-	off_t filesize = 0;
-	off_t buffsize = 32 * 1024;
-
-	if (!atty) {
-		in = stdin;
-	} else {
-		fd = open(FILENAME, O_RDONLY);
-		if (fd == -1) {
-			err(2, "open: %s", FILENAME);
-			return 2;
-		}
-		struct stat fs;
-		if (fstat(fd, &fs) == -1) {
-			err(3, "stat: %s", FILENAME);
-			return 3;
-		}
-		in = fdopen(fd, "r");
-		buffsize = filesize = fs.st_size;
-		//printf("filesize=%lld\n", filesize);
-	}
+int xupl (FILE* in,	off_t buffsize) {
 
 	unsigned short bit = 0x0001;
 	unsigned short INI = bit;
@@ -245,96 +212,51 @@ int main (int argc, char **argv) {
 	if (tk) free(tk);
 	free(buf);
 
-	printf("\n");
-
-	if (filesize > 0) {
-		fclose(in);
-	}
-
 	xmlSaveFormatFileEnc("-", xdoc, (const char*) "UTF-8", 1);
 	xmlCleanupParser();
 
 	return 0;
 }
 
-/**
- *
- */
-int xmlize (int argc, char **argv) {
+int main (int argc, char **argv) {
 
-	xmlNodePtr root_node = NULL, node = NULL, node1 = NULL;
-	unsigned char buff[256];
-	int i, j;
+	int atty = isatty(0);
+	if (argc <= 1 && atty) return 1;
 
-	/*
-	 * Creates a new document, a node and set it as a root node
-	 */
-	xmlDocPtr doc = xmlNewDoc((const unsigned char*) "1.1");
-	xmlNodePtr root = xmlNewNode(NULL, (const unsigned char*) "root");
-	xmlDocSetRootElement(doc, root);
+	const char* FILENAME = argv[1];
 
-	/*
-	 * xmlNewChild() creates a new node, which is "attached" as child node
-	 * of root node.
-	 */
-	xmlNewChild(root, NULL, (const unsigned char*) "node1",
-	    (const unsigned char*) "content of node 1");
-	/*
-	 * The same as above, but the new child node doesn't have a content
-	 */
-	xmlNewChild(root, NULL, (const unsigned char*) "node2", NULL );
-
-	/*
-	 * xmlNewProp() creates attributes, which is "attached" to an node.
-	 * It returns xmlAttrPtr, which isn't used here.
-	 */
-	node = xmlNewChild(root, NULL, (const unsigned char*) "node3",
-	    (const unsigned char*) "this node has attributes");
-	xmlNewProp(node, (const unsigned char*) "attribute",
-	    (const unsigned char*) "yes");
-	xmlNewProp(node, (const unsigned char*) "foo", (const unsigned char*) "bar");
-
-	/*
-	 * Here goes another way to create nodes. xmlNewNode() and xmlNewText
-	 * creates a node and a text node separately. They are "attached"
-	 * by xmlAddChild()
-	 */
-	node = xmlNewNode(NULL, (const unsigned char*) "node4");
-	node1 =
-	    xmlNewText(
-	        (const unsigned char*) "other way to create content (which is also a node)");
-	xmlAddChild(node, node1);
-	xmlAddChild(root, node);
-
-	/*
-	 * A simple loop that "automates" nodes creation
-	 */
-	for (i = 5; i < 7; i++) {
-		sprintf((char* ) buff, (const char* ) "node%d", i);
-		node = xmlNewChild(root, NULL, buff, NULL );
-		for (j = 1; j < 4; j++) {
-			sprintf((char* ) buff, (const char* ) "node%d%d", i, j);
-			node1 = xmlNewChild(node, NULL, buff, NULL );
-			xmlNewProp(node1, (const unsigned char*) "odd",
-			    (const unsigned char*) ((j % 2) ? "no" : "yes"));
-		}
+	if (regcomp(&re_word, "^[:_A-Za-z][:_A-Za-z0-9.-]*", REG_EXTENDED)) {
+		err(1, "Could not compile regex\n");
+		return 1;
 	}
 
-	/*
-	 * Dumping document to stdio or file
-	 */
-	xmlSaveFormatFileEnc(argc > 1 ? argv[1] : "-", doc, (const char*) "UTF-8", 1);
+	FILE* in = NULL;
+	int fd = -1;
+	off_t filesize = 0;
+	off_t buffsize = 32 * 1024;
 
-	/*
-	 *Free the global variables that may
-	 *have been allocated by the parser.
-	 */
-	xmlCleanupParser();
+	if (!atty) {
+		in = stdin;
+	} else {
+		fd = open(FILENAME, O_RDONLY);
+		if (fd == -1) {
+			err(2, "open: %s", FILENAME);
+			return 2;
+		}
+		struct stat fs;
+		if (fstat(fd, &fs) == -1) {
+			err(3, "stat: %s", FILENAME);
+			return 3;
+		}
+		in = fdopen(fd, "r");
+		buffsize = filesize = fs.st_size;
+		//printf("filesize=%lld\n", filesize);
+	}
 
-	/*
-	 * this is to debug memory for regression tests
-	 * /
-	 xmlMemoryDump();
-	 //*/
-	return (0);
+	xupl(in,buffsize);
+
+	if (filesize > 0) {
+		fclose(in);
+	}
+
 }
