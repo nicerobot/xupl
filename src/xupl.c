@@ -132,8 +132,10 @@ int xupl (FILE* in,	off_t buffsize) {
 								    (int) (pmatch[0].rm_eo - pmatch[0].rm_so),
 								    &tk[pmatch[0].rm_so], pmatch[0].rm_so, pmatch[0].rm_eo);
 								*/
+								REQUIRE(ELE);
+							} else {
+								REQUIRE(ATT);
 							}
-							REQUIRE(ELE);
 						} ELIF(ELE) {
 							REQUIRE(ATT);
 							process_element = 1;

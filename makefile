@@ -1,7 +1,9 @@
 .PHONY : clean test check run all enter finish leave dot
 
 test: all
-	@echo 'html{head{title{"XUPL"}}body{"Supple"}}' | ./xupl
+	@./xupl test/note.xupl
+	@./xupl test/html.xupl
+	@./xupl test/attr1.xupl
 
 all: xupl
 
