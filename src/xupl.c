@@ -127,14 +127,16 @@ int xupl (FILE* in,	off_t buffsize) {
 									att_is_string = st;
 									memcpy(att, t, tklen);
 									break;
+								// TODO make this parameterized, characters and names.
 								case '.': metatext = "class"; break; 
 								case '#': metatext = "id"; break;
 								case '@': metatext = "project"; break;
-								case '[': metatext = "href"; break;
+								case '/': t = tk; metatext = "href"; break;
+								case '[': metatext = "data"; break;
 								case '~': metatext = "duration"; break;
 								case '=': metatext = "location"; break;
 								case '^': metatext = "at"; break;
-								case ':': metatext = "context"; break;
+								case ':': metatext = "type"; break;
 								case '!': metatext = "priority"; break;
 							}
 							if (metatext) xmlNewProp(xc, (xmlChar*)metatext, t);
