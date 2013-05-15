@@ -113,11 +113,31 @@ int xupl (FILE* in,	off_t buffsize) {
 							att = NULL;
 							att_is_string = 0;
 						} ELIF(ATT) {
-							if (!att) {
-								att = malloc(tklen);
-								att_is_string = st;
-								memcpy(att, t, tklen);
+							char *metatext = NULL;
+							switch (tk[0]) {
+								case '.': case '#': case '@': case '[': case '~': 
+								case '=': case '^': case ':': case '!':
+									t += 1;
+									break;
 							}
+							switch (tk[0]) {
+								default:
+								case '"':
+									att = malloc(tklen);
+									att_is_string = st;
+									memcpy(att, t, tklen);
+									break;
+								case '.': metatext = "class"; break; 
+								case '#': metatext = "id"; break;
+								case '@': metatext = "project"; break;
+								case '[': metatext = "href"; break;
+								case '~': metatext = "duration"; break;
+								case '=': metatext = "location"; break;
+								case '^': metatext = "at"; break;
+								case ':': metatext = "context"; break;
+								case '!': metatext = "priority"; break;
+							}
+							if (metatext) xmlNewProp(xc, (xmlChar*)metatext, t);
 						} ELIF(DOC) {
 							regex_t re_doc;
 							if (regcomp(&re_doc, "^[?](xml|xupl)", REG_EXTENDED)) {

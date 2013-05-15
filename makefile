@@ -4,6 +4,7 @@ test: all
 	@./xupl test/note.xupl
 	@./xupl test/html.xupl
 	@./xupl test/attr1.xupl
+	@./xupl test/meta1.xupl
 
 all: xupl
 
