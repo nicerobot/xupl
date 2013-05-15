@@ -7,11 +7,9 @@ input:
       from {"Jani"}
       subject {"Reminder"}
       body {"Don't forget me this weekend!"}
-    }
 
 output:
 
-    <?xml version="1.1" encoding="UTF-8"?>
     <note>
       <to>Tove</to>
       <from>Jani</from>
@@ -21,6 +19,8 @@ output:
 
 # meta1.xupl
 
+- Tests implemention of automatic attribute-names based on [metatext](//github.com/nicerobot/text-plain/wiki).
+
 input:
 
     html{head{title{"XUPL"}}body{
@@ -29,13 +29,9 @@ input:
         importance !hot ^adate {
           geo =25.72N80.28W :context {}
           subject @xuplproj {"Reminder"}
-        }
-      }
-    }}
 
 output:
 
-    <?xml version="1.1" encoding="UTF-8"?>
     <html>
       <head>
         <title>XUPL</title>
@@ -60,7 +56,6 @@ input:
 
 output:
 
-    <?xml version="1.1" encoding="UTF-8"?>
     <html>
       <head>
         <title>XUPL</title>
@@ -75,11 +70,9 @@ input:
     note to "Tove", from "Jani" {
       subject {"Reminder"}
       body {"Don't forget me this weekend!"}
-    }
 
 output:
 
-    <?xml version="1.1" encoding="UTF-8"?>
     <note to="Tove" from="Jani">
       <subject>Reminder</subject>
       <body>Dont forget me this weekend!</body>

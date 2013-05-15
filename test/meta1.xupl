@@ -4,6 +4,3 @@ html{head{title{"XUPL"}}body{
 		importance !hot ^adate {
 			geo =25.72N80.28W :context {}
 		  subject @xuplproj {"Reminder"}
-		}
-	}
-}}
