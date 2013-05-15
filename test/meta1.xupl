@@ -1,4 +1,9 @@
-note to "Tove", from "Jani" {
-  subject .xuplclass #xuplid @xuplproj [xupl.org ~xupldur =xuplhere ^xupldate :xuplctx !xuplhot {"Reminder"}
-  body {"Don't forget me this weekend!"}
-}
+html{head{title{"XUPL"}}body{
+	div .xuplclass #xuplid {
+		a [//github.com/nicerobot/text-plain/wiki {"text-plain.org"}
+		importance !hot ^adate {
+			geo =25.72N80.28W :context {}
+		  subject @xuplproj {"Reminder"}
+		}
+	}
+}}
