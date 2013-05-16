@@ -144,7 +144,7 @@ int xupl (FILE* in,	off_t buffsize) {
 								return 4;
 							}
 							regmatch_t pmatch[1];
-							process_element = regnexec(&re_doc, (char*) tk, tkndx, 1, pmatch, 0);
+							process_element = regexec(&re_doc, (char*) tk, 1, pmatch, 0);
 							if (!process_element) {
 								/*
 								printf("matched %.*s from %lld to %lld\n",
