@@ -6,12 +6,18 @@ test: all
 all: build xupl
 
 xupl: build/xupl.o build/main.o
-	cc `xml2-config --cflags --libs` -o $@ $^
+	@date +v0.1+%y%j.%H%M | tee VERSION.txt
+	@cc `xml2-config --cflags --libs` -o $@ $^
 
 build:
 	mkdir build
 
-build/%.o: src/%.c       ; cc -c -Iinclude `xml2-config --cflags --libs` -o $@ $^
+build/%.o: src/%.c ; @cc -c -Iinclude `xml2-config --cflags --libs` -o $@ $^
 
 check: test
-clean:             ; rm -f *.c *.dot *.png xupl
+
+clean: .log
+	rm -vf *.c *.dot *.png xupl | tee .log/clean.out
+
+.log:
+	mkdir .log
