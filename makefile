@@ -12,7 +12,7 @@ xupl: build/xupl.o build/main.o
 build:
 	mkdir build
 
-build/%.o: src/%.c ; @cc -c -Iinclude `xml2-config --cflags --libs` -o $@ $^
+build/%.o: src/%.c ; @cc -c -std=c99 -Iinclude `xml2-config --cflags --libs` -o $@ $^
 
 check: test
 
