@@ -1,16 +1,17 @@
 .PHONY : clean test check run all enter finish leave dot
 
 test: all
-	@./xupl test/note.xupl
-	@./xupl test/html.xupl
-	@./xupl test/attr1.xupl
-	@./xupl test/meta1.xupl
+	@cd test; make
 
-all: xupl
+all: build xupl
 
-xupl: src/xupl.c
+xupl: build/xupl.o build/main.o
+	cc `xml2-config --cflags --libs` -o $@ $^
 
-%: src/%.c             ; cc -I../include `xml2-config --cflags --libs` -o $@ $^
+build:
+	mkdir build
+
+build/%.o: src/%.c       ; cc -c -Iinclude `xml2-config --cflags --libs` -o $@ $^
 
 check: test
 clean:             ; rm -f *.c *.dot *.png xupl
