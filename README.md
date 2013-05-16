@@ -1,3 +1,5 @@
+[![Build Status](https://buildhive.cloudbees.com/job/nicerobot/job/xupl/badge/icon)](https://buildhive.cloudbees.com/job/nicerobot/job/xupl/)
+
 # `xupl`
 
 `xupl - ˈsəpəl`
