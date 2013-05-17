@@ -1,0 +1,31 @@
+bump=
+  name "bump"
+  version v1.0.0
+  description "bump project"
+  main "index"
+{
+  repository=
+    type "git",
+    url http://github.com/nicerobot/text-plain.git
+  
+  devDependencies should v0.3.1
+  dependencies {
+    express v2.5.4
+    jade from v0.0.1
+    connect-mongo from v0.0.1
+    async from v0.0.1
+    mongoose from v2.0.0
+    mongoose-auth from v0.0.11
+    less from v0.0.1
+  }
+  engines {
+    node from v0.3.0, to v0.7.0
+  }
+  contributors {
+    name "Name1", twitter @twitter, email mailto:email, url http://about.me
+    name "Name2", twitter @twitter, email mailto:email, url http://about.me
+    name "Name3", twitter @twitter, email mailto:email, url http://about.me
+    name "Name4", twitter @twitter, email mailto:email, url http://about.me
+    name "Name5", twitter @twitter, email mailto:email, url http://about.me
+  }
+}

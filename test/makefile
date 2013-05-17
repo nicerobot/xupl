@@ -2,8 +2,10 @@
 test: xupl README.md
 
 xupl:
-	@cd ../make
+	@cd ..; make $@
 
+# TODO save output of each run to .xml.
+# TODO diff output to expected results.
 README.md: xupl ../VERSION.txt
 	@cat ../VERSION.txt >README.md
 	@for test in $(wildcard *.xupl); do \

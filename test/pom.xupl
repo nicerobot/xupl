@@ -1,0 +1,40 @@
+project http://maven.apache.org/POM/4.0.0 , http://maven.apache.org/maven-v4_0_0.xsd schemaLocation@xsi=
+  modelVersion v4.0.0
+  groupId org.nicerobot.ex
+  artifactId java-ex
+  version v0.0.1-SNAPSHOT
+    dependencies
+      dependency=
+        groupId junit
+        artifactId junit
+        version v4.7
+        type jar
+        scope test
+      dependency=
+        groupId org.nicerobot
+        artifactId java-util
+        version v0.0.1-SNAPSHOT
+      dependency=
+        groupId org.nicerobot
+        artifactId java-io
+        version v0.0.1-SNAPSHOT
+      dependency=
+        groupId javax.activation
+        artifactId activation
+        version v1.1.1
+        type jar
+        scope compile
+      dependency=
+        groupId javax.servlet
+        artifactId servlet-api
+        version v2.5
+        type jar
+        scope compile
+    build
+      plugins
+        plugin=
+          groupId org.apache.maven.plugins
+          artifactId maven-war-plugin
+          version v2.0.2
+            configuration
+              webappDirectory war...

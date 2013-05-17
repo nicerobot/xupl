@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <err.h>
 #include <errno.h>
@@ -6,9 +9,6 @@
 #include <libxml2/libxml/tree.h>
 #include <limits.h>
 #include <regex.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -32,7 +32,7 @@ typedef struct xupl_ {
 	xupl* (*done)(xupl*);
 	xupl* (*cleanup)(xupl*);
 	FILE* in;
-	xmlDocPtr* doc;
+	xmlDocPtr doc;
 	off_t buffsize;
 	int status;
 } xupl_;
@@ -51,49 +51,40 @@ xupl *xupl_init_with_file_pointer_and_buffer (FILE* in, off_t buffsize) {
 }
 
 xupl *xupl_init_with_file_descriptor_and_buffer (int fd, off_t buffsize) {
-	//int fileno(FILE *stream)
-	/*
-	int fd = open(FILENAME, O_RDONLY);
-	if (fd == -1) {
-		err(2, "open: %s", FILENAME);
-		return 2;
-	}
 	struct stat fs;
 	if (fstat(fd, &fs) == -1) {
-		err(3, "stat: %s", FILENAME);
-		return 3;
+		err(3, "stat: %d", fd);
+		fs.st_size = 32*1024;
 	}
-	in = fdopen(fd, "r");
-	buffsize = filesize = fs.st_size;
-	//printf("filesize=%lld\n", filesize);
-	*/
-	return NULL;
+	xupl *xup = xupl_init_with_file_pointer_and_buffer(fdopen(fd, "r"),fs.st_size);
+
+	return xup;
 }
 
 xupl *xupl_init_with_file_descriptor (int fd) {
-	return NULL;
+	return xupl_init_with_file_descriptor_and_buffer(fd,32*1024);
 }
 
-xupl *xupl_init_with_file_name (const char* fn) {
-	return NULL;
+xupl *xupl_init_with_file_name (char* fn) {
+	return xupl_init_with_file_descriptor(open(fn, O_RDONLY));
 }
 
 xupl *xupl_init_with_file_pointer (FILE* in) {
-	return NULL;
+	return xupl_init_with_file_descriptor(fileno(in));
 }
 
 xupl *xupl_init(int argc, char *argv[]) {
 	int atty = isatty(0);
 	if (argc <= 1 && atty) return NULL;
 
-	xupl_* xup = NULL;
+	xupl* xup = NULL;
 	if (!atty) {
-		xup = xupl_init(argc,argv);
+		xup = xupl_init_with_file_pointer_and_buffer(stdin,32*1024);
 	} else {
 		xup = xupl_init_with_file_name(argv[1]);
 	}
 
-	return xupl_init_with_file_descriptor_and_buffer(stdin,32*1024);
+	return xup;
 }
 
 xupl *xupl_print(xupl *xup) {
@@ -102,11 +93,12 @@ xupl *xupl_print(xupl *xup) {
 	return xup;
 }
 
-void xupl_cleanup(xupl *xup) {
+xupl *xupl_cleanup(xupl *xup) {
 	xmlCleanupParser();
+	return xup;
 }
 
-int xupl_done (xupl *xup) {
+xupl *xupl_done (xupl *xup) {
 	int status = 1;
 	if (xup) {
 		xupl_ *xup_ = (xupl_*) xup;
@@ -118,7 +110,7 @@ int xupl_done (xupl *xup) {
 		xup_->buffsize = 0;
 		free(xup);
 	}
-	return status;
+	return NULL;
 }
 
 xupl* xupl_parse (xupl *xup) {
@@ -333,9 +325,6 @@ xupl* xupl_parse (xupl *xup) {
 	if (att) free(att);
 	if (tk) free(tk);
 	free(buf);
-
-	xmlSaveFormatFileEnc("-", xdoc, (const char*) "UTF-8", 1);
-	xmlCleanupParser();
 
 	return xup;
 }
