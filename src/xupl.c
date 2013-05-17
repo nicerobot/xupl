@@ -1,6 +1,7 @@
 #include <ctype.h>
 #include <err.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <libxml2/libxml/parser.h>
 #include <libxml2/libxml/tree.h>
 #include <limits.h>
@@ -13,7 +14,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/uio.h>
-#include "xupl.h"
+#include <unistd.h>
+#include "xupla.h"
 
 #define REQUIRE(x) _state = (x)
 #define ALLOW(x) _state |= (x)
@@ -24,7 +26,107 @@
 #define IF(x) if IS(x)
 #define ELIF(x) else IF(x)
 
-int xupl (FILE* in,	off_t buffsize) {
+typedef struct xupl_ {
+	xupl* (*parse)(xupl*);
+	xupl* (*print)(xupl*);
+	xupl* (*done)(xupl*);
+	xupl* (*cleanup)(xupl*);
+	FILE* in;
+	xmlDocPtr* doc;
+	off_t buffsize;
+	int status;
+} xupl_;
+
+xupl *xupl_init_with_file_pointer_and_buffer (FILE* in, off_t buffsize) {
+	xupl_* xup = (xupl_*) malloc(sizeof(xupl_));
+	xup->doc = xmlNewDoc((const unsigned char*) "1.1");
+	xup->in = in;
+	xup->buffsize = buffsize;
+	xup->status = 0;
+	xup->parse = xupl_parse;
+	xup->print = xupl_print;
+	xup->done = xupl_done;
+	xup->cleanup = xupl_cleanup;
+	return (xupl*)xup;
+}
+
+xupl *xupl_init_with_file_descriptor_and_buffer (int fd, off_t buffsize) {
+	//int fileno(FILE *stream)
+	/*
+	int fd = open(FILENAME, O_RDONLY);
+	if (fd == -1) {
+		err(2, "open: %s", FILENAME);
+		return 2;
+	}
+	struct stat fs;
+	if (fstat(fd, &fs) == -1) {
+		err(3, "stat: %s", FILENAME);
+		return 3;
+	}
+	in = fdopen(fd, "r");
+	buffsize = filesize = fs.st_size;
+	//printf("filesize=%lld\n", filesize);
+	*/
+	return NULL;
+}
+
+xupl *xupl_init_with_file_descriptor (int fd) {
+	return NULL;
+}
+
+xupl *xupl_init_with_file_name (const char* fn) {
+	return NULL;
+}
+
+xupl *xupl_init_with_file_pointer (FILE* in) {
+	return NULL;
+}
+
+xupl *xupl_init(int argc, char *argv[]) {
+	int atty = isatty(0);
+	if (argc <= 1 && atty) return NULL;
+
+	xupl_* xup = NULL;
+	if (!atty) {
+		xup = xupl_init(argc,argv);
+	} else {
+		xup = xupl_init_with_file_name(argv[1]);
+	}
+
+	return xupl_init_with_file_descriptor_and_buffer(stdin,32*1024);
+}
+
+xupl *xupl_print(xupl *xup) {
+	xupl_ *xup_ = (xupl_*) xup;
+	xmlSaveFormatFileEnc("-", xup_->doc, (const char*) "UTF-8", 1);
+	return xup;
+}
+
+void xupl_cleanup(xupl *xup) {
+	xmlCleanupParser();
+}
+
+int xupl_done (xupl *xup) {
+	int status = 1;
+	if (xup) {
+		xupl_ *xup_ = (xupl_*) xup;
+		if (xup_->cleanup) xup_->cleanup(xup);
+		status = xup_->status;
+		xup_->cleanup = NULL;
+		xup_->doc = NULL;
+		xup_->in = NULL;
+		xup_->buffsize = 0;
+		free(xup);
+	}
+	return status;
+}
+
+xupl* xupl_parse (xupl *xup) {
+
+	xupl_ *xup_ = (xupl_*) xup;
+	xmlDocPtr xdoc = xup_->doc;
+	FILE* in = xup_->in;
+	off_t buffsize = xup_->buffsize;
 
 	unsigned short bit = 0x0001;
 	unsigned short INI = bit;
@@ -50,7 +152,6 @@ int xupl (FILE* in,	off_t buffsize) {
 	int chars_read;
 	char* buf = malloc(buffsize + 1);
 
-	xmlDocPtr xdoc = xmlNewDoc((const unsigned char*) "1.1");
 	xmlNodePtr xroot = NULL;
 	xmlNodePtr xc = NULL;
 
@@ -141,7 +242,7 @@ int xupl (FILE* in,	off_t buffsize) {
 							regex_t re_doc;
 							if (regcomp(&re_doc, "^[?](xml|xupl)", REG_EXTENDED)) {
 								err(4, "Could not compile regex\n");
-								return 4;
+								return xup;
 							}
 							regmatch_t pmatch[1];
 							process_element = regexec(&re_doc, (char*) tk, 1, pmatch, 0);
@@ -236,5 +337,5 @@ int xupl (FILE* in,	off_t buffsize) {
 	xmlSaveFormatFileEnc("-", xdoc, (const char*) "UTF-8", 1);
 	xmlCleanupParser();
 
-	return 0;
+	return xup;
 }

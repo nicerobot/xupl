@@ -1,4 +1,4 @@
-v0.1+13136.1929
+v0.1+13137.0633
 
 # attr1.xupl
 
@@ -11,11 +11,6 @@ input:
 
 output:
 
-    <?xml version="1.1" encoding="UTF-8"?>
-    <note to="Tove" from="Jani">
-      <subject>Reminder</subject>
-      <body>Dont forget me this weekend!</body>
-    </note>
 
 # html.xupl
 
@@ -26,19 +21,6 @@ input:
 
 output:
 
-    <?xml version="1.1" encoding="UTF-8"?>
-    <html>
-      <head>
-        <title>XUPL</title>
-      </head>
-      <body>
-        <p>Supple</p>
-        <p>XUPL</p>
-        <p>
-          <Awesome/>
-        </p>
-      </body>
-    </html>
 
 # meta1.xupl
 
@@ -54,21 +36,6 @@ input:
 
 output:
 
-    <?xml version="1.1" encoding="UTF-8"?>
-    <html>
-      <head>
-        <title>XUPL</title>
-      </head>
-      <body>
-        <div class="xuplclass" id="xuplid" data="somedata">
-          <a href="//github.com/nicerobot/text-plain/wiki">text-plain.org</a>
-          <importance priority="hot" at="adate">
-            <geo location="25.72N80.28W" type="style"/>
-            <subject project="xuplproj">Reminder</subject>
-          </importance>
-        </div>
-      </body>
-    </html>
 
 # note.xupl
 
@@ -83,10 +50,3 @@ input:
 
 output:
 
-    <?xml version="1.1" encoding="UTF-8"?>
-    <note>
-      <to>Tove</to>
-      <from>Jani</from>
-      <subject>Reminder</subject>
-      <body>Dont forget me this weekend!</body>
-    </note>
