@@ -33,7 +33,7 @@ README.md: ../VERSION.txt
 output:
 	@cat ../VERSION.txt
 	@make --quiet xmls
-	@printf '\n\n'
+	@printf '\n\nmissing:\n\n'
 	@make --quiet missing
 
 clean:
