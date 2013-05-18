@@ -1,0 +1,15 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<html>
+  <head>
+    <title>XUPL</title>
+  </head>
+  <body>
+    <div class="xuplclass" id="xuplid" data="somedata">
+      <a href="//github.com/nicerobot/text-plain/wiki">text-plain.org</a>
+      <importance priority="hot" at="adate">
+        <geo location="25.72N80.28W" type="style"/>
+        <subject project="xuplproj">Reminder</subject>
+      </importance>
+    </div>
+  </body>
+</html>

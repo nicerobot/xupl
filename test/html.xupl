@@ -1,14 +1,1 @@
-html lang en
-  head
-    title: "&{pageTitle}"
-    script@text/javascript
-      if (foo) {
-         bar()
-      }
-  body
-    h1: "Xupl - template engine"
-    div#container
-      if@tup isXupl
-        p@html: "You are amazing"
-      else@tup
-        p@html Get on it!
+html{head{title{"XUPL"}}body{p{"Supple"}p{"XUPL"}p{Awesome}
