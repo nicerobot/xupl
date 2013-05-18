@@ -1,6 +1,6 @@
-v0.1+13137.2059
+v0.1+13137.2102
 
-# [attr1.xupl](test/attr1.xupl)
+# [attr1.xupl](attr1.xupl)
 
 input:
 
@@ -19,7 +19,7 @@ output:
 
 
 
-# [html.xupl](test/html.xupl)
+# [html.xupl](html.xupl)
 
 input:
 
@@ -44,7 +44,7 @@ output:
 
 
 
-# [meta1.xupl](test/meta1.xupl)
+# [meta1.xupl](meta1.xupl)
 
 input:
 
@@ -76,7 +76,7 @@ output:
 
 
 
-# [note.xupl](test/note.xupl)
+# [note.xupl](note.xupl)
 
 input:
 

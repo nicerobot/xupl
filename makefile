@@ -43,7 +43,9 @@ rm:
 .log:
 	@mkdir .log
 
-push:
-	git add .
-	git cma "$(M)"
-	git push
+bump:
+	@make clean
+	@make
+	@git add .
+	@git cma "$(M)"
+	@git push

@@ -42,7 +42,7 @@ clean:
 xmls: ../xupl $(XML)
 
 %.xml: %.xupl;
-	@printf '\n# [%s](test/%s)\n\ninput:\n\n' $^ $^
+	@printf '\n# [%s](%s)\n\ninput:\n\n' $^ $^
 	@cat $^ | sed 's/^/    /'
 	@printf '\n\noutput:\n\n'
 	@../xupl $^ | tee $(notdir $@) | sed 's/^/    /'
