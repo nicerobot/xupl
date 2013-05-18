@@ -25,7 +25,7 @@ test: ../xupl README.md
 	@head -1 README.md
 
 ../xupl:
-	@cd ..; make $(notdir $@)
+	@cd ..; make exe
 
 README.md: ../VERSION.txt
 	@make --quiet output >README.md

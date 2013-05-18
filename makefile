@@ -15,12 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Xupl.  If not, see <http://www.gnu.org/licenses/>.
 
-.PHONY : clean test check run all enter finish leave dot
+.PHONY : clean test check run all enter finish leave dot push
 
 test: all
 	@cd test; make
 
-all: build .log xupl
+exe: build .log xupl
 
 xupl: build/xupl.o build/main.o
 	@date +v0.1+%y%j.%H%M | tee VERSION.txt
@@ -34,8 +34,16 @@ build/%.o: src/%.c ; @cc -c -std=gnu99 -Iinclude `xml2-config --cflags` -o $@ $^
 check: test
 
 clean: .log
-	@rm -vfr build .log *.c *.dot *.png xupl | tee .log/clean.out
+	@make rm 2>&1 | tee .log/clean.out
+
+rm:
+	@rm -vfr build *.c *.dot *.png xupl
 	@cd test; make clean
 
 .log:
 	@mkdir .log
+
+push:
+	git add .
+	git cma "$(M)"
+	git push
