@@ -16,6 +16,7 @@
 # along with Xupl.  If not, see <http://www.gnu.org/licenses/>.
 
 .PHONY : clean test check run all enter finish leave dot push
+M?=bump
 
 test: all
 	@cd test; make
