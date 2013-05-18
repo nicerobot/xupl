@@ -49,6 +49,6 @@ xmls: ../xupl $(XML)
 	@printf '\n\n'
 	@diff $@ expect/$@ | sed 's/^/    /'
 
-expect/%.xml: %.xupl; @echo missing $@
+expect/%.xml: %.xupl; @echo missing $@ | sed 's/^/    /'
 
 missing: $(addprefix expect/,$(XUPL:.xupl=.xml))
