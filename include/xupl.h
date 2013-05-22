@@ -28,4 +28,6 @@ typedef struct xupl {
 } xupl;
 xupl *xupl_init(int argc, char *argv[]);
 
+#define Xupl(x) { xupl*_=xupl_init(argc,argv);_->parse(_) ->x(_) ->done(_); }
+
 #endif

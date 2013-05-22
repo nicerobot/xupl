@@ -21,9 +21,6 @@ along with Xupl.  If not, see <http://www.gnu.org/licenses/>.
 
 int main (int argc, char *argv[]) {
 
-	xupl*_=xupl_init(argc,argv);
-	_->parse(_);
-	_->print(_);
-	_->done(_);
+	Xupl( print )
 
 }
