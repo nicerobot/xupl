@@ -41,7 +41,7 @@ Coming soon, the above can be written using only indentations for blocks:
 
 or compact:
 
-    html:
+    html
     	head: title: "Xupl"
 	    body: div #xuplid .xuplclass
 	    	a //github.com/nicerobot/text-plain/wiki: "text-plain.org"
