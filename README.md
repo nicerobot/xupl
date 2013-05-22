@@ -2,7 +2,9 @@
 
 # See the [`xupl`](https://github.com/nicerobot/xupl/wiki) wiki
 
-Xupl enables the writing HTML like this
+Let's return to a sane world where opening and closing blocks is as simple and easy as matching curly braces `{}` and all the words with meaning in the text are not hidden beneath cruft `</>`.
+
+Xupl enables the writing of HTML like this:
 
     html {
     	head {title{"Xupl"}}
@@ -22,4 +24,3 @@ and getting this:
         </div>
       </body>
     </html>
-
