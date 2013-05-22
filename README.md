@@ -8,9 +8,9 @@ Xupl enables the writing of HTML like this:
 
     html {
     	head {title{"Xupl"}}
-    body {
-    	div #xuplid .xuplclass {
-    		a //github.com/nicerobot/text-plain/wiki {"text-plain.org"}
+	    body {
+	    	div #xuplid .xuplclass {
+	    		a //github.com/nicerobot/text-plain/wiki {"text-plain.org"}
 
 and getting this:
 
