@@ -6,7 +6,7 @@ Xupl enables the writing HTML like this
 
     html {
     	head {title{"Xupl"}}
-    body {
+    } body {
     	div #xuplid .xuplclass {
     		a //github.com/nicerobot/text-plain/wiki {"text-plain.org"}
 
