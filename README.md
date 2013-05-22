@@ -24,3 +24,25 @@ and getting this:
         </div>
       </body>
     </html>
+
+Coming soon, the above can be written using only indentations for blocks:
+
+    html
+    	head
+    		title
+    			"Xupl"
+	    body
+	    	div #xuplid .xuplclass
+	    		a //github.com/nicerobot/text-plain/wiki
+	    			"text-plain.org"
+	    		"And any quoted text
+					is naturally
+					multi-line."
+
+or compact:
+
+    html:
+    	head: title: "Xupl"
+	    body: div #xuplid .xuplclass
+	    	a //github.com/nicerobot/text-plain/wiki: "text-plain.org"
+    		"And any quoted text\ncan embed\ncarriage returns."
