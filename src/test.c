@@ -1,6 +1,3 @@
-#ifndef XUPL_HEADER_GUARD
-#define XUPL_HEADER_GUARD
-
 /*
 Copyright 2013 Nice Robot Corporation
 
@@ -19,15 +16,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Xupl.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <libxml2/libxml/parser.h>
 
-typedef struct xupl {} xupl;
-typedef xupl* (*xupf)(xupl*);
-typedef void (*xupd)(xmlDocPtr);
+#include "xuplm.h"
 
-void Xupl(int, char *[], xupd, xupf, ...);
+void xupl_user_done(xmlDocPtr doc) {
+	// do something with the doc
+}
 
-#define XUPL(...) Xupl(argc,argv, __VA_ARGS__, 0)
-#define XUP() XUPL(0,0)
-
-#endif
+xupl* xupl_user(xupl*_) {
+	return xupl_print(_);
+}

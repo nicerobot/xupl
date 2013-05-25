@@ -17,10 +17,13 @@ You should have received a copy of the GNU General Public License
 along with Xupl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "xupl.h"
+#include "xuplm.h"
+
+void xupl_user_done(xmlDocPtr doc);
+xupl* xupl_user(xupl*_);
 
 int main (int argc, char *argv[]) {
 
-	Xupl( print )
+	XUPL( xupl_user_done, xupl_user );
 
 }

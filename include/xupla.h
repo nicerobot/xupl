@@ -20,17 +20,19 @@ You should have received a copy of the GNU General Public License
 along with Xupl.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <stdarg.h>
 #include "xupl.h"
 
-xupl *xupl_init_with_file_pointer_and_buffer (FILE* in,	off_t buffsize);
-xupl *xupl_init_with_file_descriptor_and_buffer (int fd, off_t buffsize);
-xupl *xupl_init_with_file_descriptor (int fd);
-xupl *xupl_init_with_file_name (char* fn);
-xupl *xupl_init_with_file_pointer (FILE* in);
-xupl *xupl_parse (xupl *ctxupl);
-xupl *xupl_print(xupl *ctxupl);
+xupl *xupl_init_with_file_pointer_and_buffer (FILE*,	off_t);
+xupl *xupl_init_with_file_descriptor_and_buffer (int, off_t);
+xupl *xupl_init_with_file_descriptor (int);
+xupl *xupl_init_with_file_name (char*);
+xupl *xupl_init_with_file_pointer (FILE*);
 
-xupl *xupl_done (xupl *ctxupl);
-xupl *xupl_cleanup(xupl *ctxupl);
+xupl *xupl_cleanup(xupl*);
+xupl *xupl_nestv(xupl*, va_list);
+xupl *xupl_nest(xupl*, ...);
+xupl *xupl_chainv(xupl*, va_list);
+xupl *xupl_chain(xupl*, ...);
 
 #endif

@@ -23,7 +23,7 @@ test: all
 
 exe: build .log xupl
 
-xupl: build/xupl.o build/main.o
+xupl: build/xupl.o build/test.o build/main.o
 	@date +v0.1+%y%j.%H%M | tee VERSION.txt
 	@cc -o $@ $^ `xml2-config --libs` 2>&1 | tee .log/ld-xupl.out
 

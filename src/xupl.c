@@ -17,13 +17,11 @@ You should have received a copy of the GNU General Public License
 along with Xupl.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <stdio.h>
-#include <stdarg.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <libxml2/libxml/parser.h>
 #include <libxml2/libxml/tree.h>
 #include <limits.h>
 #include <regex.h>
@@ -44,16 +42,17 @@ along with Xupl.  If not, see <http://www.gnu.org/licenses/>.
 #define IF(x) if IS(x)
 #define ELIF(x) else IF(x)
 
+typedef struct xupl* (*xupv)(struct xupl*, ...);
+
 typedef struct xupl_ {
-	xupl* (*parse)(xupl*);
-	xupl* (*print)(xupl*);
-	xupl* (*done)(xupl*);
-	xupl* (*cleanup)(xupl*);
+	void (*done)(xmlDocPtr doc);
 	FILE* in;
 	xmlDocPtr doc;
 	off_t buffsize;
 	int status;
 } xupl_;
+
+void xupl_user_done(xmlDocPtr doc);
 
 xupl *xupl_init_with_file_pointer_and_buffer (FILE* in, off_t buffsize) {
 	xupl_* xup = (xupl_*) malloc(sizeof(xupl_));
@@ -61,10 +60,7 @@ xupl *xupl_init_with_file_pointer_and_buffer (FILE* in, off_t buffsize) {
 	xup->in = in;
 	xup->buffsize = buffsize;
 	xup->status = 0;
-	xup->parse = xupl_parse;
-	xup->print = xupl_print;
-	xup->done = xupl_done;
-	xup->cleanup = xupl_cleanup;
+	xup->done = xupl_user_done;
 	return (xupl*)xup;
 }
 
@@ -106,8 +102,8 @@ xupl *xupl_init(int argc, char *argv[]) {
 }
 
 xupl *xupl_print(xupl *xup) {
-	xupl_ *xup_ = (xupl_*) xup;
-	xmlSaveFormatFileEnc("-", xup_->doc, (const char*) "UTF-8", 1);
+	xupl_*_ = (xupl_*) xup;
+	xmlSaveFormatFileEnc("-", _->doc, (const char*) "UTF-8", 1);
 	return xup;
 }
 
@@ -116,16 +112,46 @@ xupl *xupl_cleanup(xupl *xup) {
 	return xup;
 }
 
+xupl *xupl_nestv(xupl *xup, va_list args) {
+	xupf f=va_arg(args, xupf);
+	if (f) {
+		xup = f(xupl_nestv(xup,args));
+	}
+  return xup;
+}
+
+xupl *xupl_nest(xupl *xup, ...) {
+	va_list args;
+	va_start(args, xup);
+	xup = xupl_nestv(xup, args);
+	va_end(args);
+  return xup;
+}
+
+xupl *xupl_chainv(xupl *xup, va_list args) {
+	for(xupf f=va_arg(args, xupf); f; f=va_arg(args, xupf)) {
+		xup=f(xup);
+	}
+  return xup;
+}
+
+xupl *xupl_chain(xupl *xup, ...) {
+	va_list args;
+	va_start(args, xup);
+	xup = xupl_chainv(xup, args);
+	va_end(args);
+  return xup;
+}
+
 xupl *xupl_done (xupl *xup) {
 	int status = 1;
 	if (xup) {
-		xupl_ *xup_ = (xupl_*) xup;
-		if (xup_->cleanup) xup_->cleanup(xup);
-		status = xup_->status;
-		xup_->cleanup = NULL;
-		xup_->doc = NULL;
-		xup_->in = NULL;
-		xup_->buffsize = 0;
+		xupl_*_ = (xupl_*) xup;
+		xupl_cleanup(xup);
+		status = _->status;
+		_->doc = NULL;
+		_->in = NULL;
+		_->buffsize = 0;
 		free(xup);
 	}
 	return NULL;
@@ -133,10 +159,10 @@ xupl *xupl_done (xupl *xup) {
 
 xupl* xupl_parse (xupl *xup) {
 
-	xupl_ *xup_ = (xupl_*) xup;
-	xmlDocPtr xdoc = xup_->doc;
-	FILE* in = xup_->in;
-	off_t buffsize = xup_->buffsize;
+	xupl_*_ = (xupl_*) xup;
+	xmlDocPtr xdoc = _->doc;
+	FILE* in = _->in;
+	off_t buffsize = _->buffsize;
 
 	unsigned short bit = 0x0001;
 	unsigned short INI = bit;
@@ -345,4 +371,12 @@ xupl* xupl_parse (xupl *xup) {
 	free(buf);
 
 	return xup;
+}
+
+void Xupl(int argc, char *argv[], xupd d, xupf f, ...) {
+	xupl* _ = xupl_init(argc,argv);
+	xupl_parse(_);
+	if (f) _=f(_);
+	if (d) d(((xupl_*)_)->doc);
+	xupl_done(_);
 }
