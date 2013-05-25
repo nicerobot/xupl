@@ -1,3 +1,3 @@
 xupl
-*.o
+*.[ao]
 build/

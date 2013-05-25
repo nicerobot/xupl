@@ -23,7 +23,10 @@ test: all
 
 exe: build .log xupl
 
-xupl: build/xupl.o build/test.o build/main.o
+libxupl.a: build/xupl.o build/main.o
+	@ar rvs $@ $^
+
+xupl: libxupl.a build/test.o
 	@date +v0.1+%y%j.%H%M | tee VERSION.txt
 	@cc -o $@ $^ `xml2-config --libs` 2>&1 | tee .log/ld-xupl.out
 
@@ -38,7 +41,7 @@ clean: .log
 	@make rm 2>&1 | tee .log/clean.out
 
 rm:
-	@rm -vfr build *.c *.dot *.png xupl
+	@rm -vfr build *.a *.c *.dot *.png xupl
 	@cd test; make clean
 
 .log:
