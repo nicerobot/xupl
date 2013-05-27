@@ -1,3 +1,0 @@
-html:body#top
-  "xupl stream test"
-  a#go "/nicerobot/text-plain"

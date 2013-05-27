@@ -1,8 +1,0 @@
-ivy-module v2.0 version
-  info organization "org.rnix",
-    module "xupl",
-    revision v1.0,
-    status "integration",
-    publication ${date '%Y%m%d%H%M%S'}
-  publications
-    artifact "xupl" name, "tbz2" ext, "tbz2" type

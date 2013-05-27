@@ -36,7 +36,8 @@ along with Xupl.  If not, see <http://www.gnu.org/licenses/>.
 #define REQUIRE(x) _state = (x)
 #define ALLOW(x) _state |= (x)
 #define DISABLE(x) (_state &= ~(x))
-#define STR(x) (x=='"'?ST1:ST2)
+#define STR(x) (x=='"'?DOUBLE_STRING:SINGLE_STRING)
+#define CMT(x) (x=='/'?LINE_COMMENT:MULTI_COMMENT)
 #define IS(x) ((x) & _state)
 #define NOT(x) (!((x) & _state))
 #define IF(x) if IS(x)
@@ -54,9 +55,19 @@ typedef struct xupl_ {
 
 void xupl_user_done(xmlDocPtr doc);
 
+static regex_t re_word;
+
 xupl *xupl_init_with_file_pointer_and_buffer (FILE* in, off_t buffsize) {
+	static unsigned short _init = 0;
+	if (!_init) {
+		_init = 1;
+		if (regcomp(&re_word, "^[:_a-z][:_a-z0-9.-]+", REG_EXTENDED|REG_ICASE)) {
+			err(4, "Could not compile regex\n");
+			return NULL;
+		}
+	}
 	xupl_* xup = (xupl_*) malloc(sizeof(xupl_));
-	xup->doc = xmlNewDoc((const unsigned char*) "1.1");
+	xup->doc = NULL;
 	xup->in = in;
 	xup->buffsize = buffsize;
 	xup->status = 0;
@@ -160,24 +171,21 @@ xupl *xupl_done (xupl *xup) {
 xupl* xupl_parse (xupl *xup) {
 
 	xupl_*_ = (xupl_*) xup;
-	xmlDocPtr xdoc = _->doc;
 	FILE* in = _->in;
 	off_t buffsize = _->buffsize;
 
 	unsigned short bit = 0x0001;
-	unsigned short INI = bit;
-	unsigned short PRE = (bit <<= 1);
-	unsigned short DOC = (bit <<= 1);
-	unsigned short ELE = (bit <<= 1);
-	unsigned short ATT = (bit <<= 1);
-	unsigned short ST1 = (bit <<= 1);
-	unsigned short ST2 = (bit <<= 1);
-	unsigned short ST_ = ST1 | ST2;
-	unsigned short ATN = (bit <<= 1);
-	unsigned short ATV = (bit <<= 1);
-	unsigned short WS_ = (bit <<= 1);
+	unsigned short WHITESPACE = bit;
 
-	unsigned short _state = INI;
+	unsigned short DOUBLE_STRING = (bit <<= 1);
+	unsigned short SINGLE_STRING = (bit <<= 1);
+	unsigned short STRING = DOUBLE_STRING | SINGLE_STRING;
+
+	unsigned short LINE_COMMENT = (bit <<= 1);
+	unsigned short MULTI_COMMENT = (bit <<= 1);
+	unsigned short COMMENT = LINE_COMMENT | MULTI_COMMENT;
+
+	unsigned short _state = 0;
 
 	const int default_tksize = 12;
 	int tksize = default_tksize + 1;
@@ -191,8 +199,11 @@ xupl* xupl_parse (xupl *xup) {
 	xmlNodePtr xroot = NULL;
 	xmlNodePtr xc = NULL;
 
-	xmlChar* att = NULL;
-	unsigned int att_is_string = 0;
+	const xmlChar* xuplAttr = (const xmlChar*) "data-xupl";
+	const xmlChar* xuplClosed = (const xmlChar*) "closed";
+
+	xmlDocPtr xdoc = xmlNewDoc((const unsigned char*) "1.1");
+	//xmlNsPtr xuplNs = xmlNewGlobalNs(xdoc,"http://xupl.org","xupl");
 
 	while ((chars_read = fread(buf, 1, buffsize, in)) > 0) {
 
@@ -201,114 +212,67 @@ xupl* xupl_parse (xupl *xup) {
 
 			switch (c) {
 
-				// These characters define tokens boundaries.
-				case ' ':
-				case '\n':
-				case '\t':
-				case '\f':
-				case '\v':
-				case '\r':
-					IF(ST_) break;
-					IF(INI|WS_) continue;
-					ALLOW(WS_);
+				case '\'':
+				case '"':
+					IF(STR(c)) {
+						DISABLE(STR(c));
+					} else if (NOT(STRING)) {
+						ALLOW(STR(c));
+						break;
+					}
 
 				case '{':
 				case '}':
+				case ' ':
+				case '\n':
+				case '\r':
+				case '\t':
+				case '\f':
+				case '\v':
 				case ',':
-					IF(ST_) break;
+					IF(STRING) break;
 
 					if (tk) {
 						tk[tkndx] = 0;
 
 						unsigned int tklen = tkndx + 1;
 						unsigned char* t = tk;
-						unsigned int st = 0;
-						if ((st = ('"' == t[0] || t[0] == '\''))) {
-							t += 1;
-							tklen -= 1;
-						}
 
-						unsigned int process_element = 0;
+						if (!xc) {
+							xc = xroot = xmlNewNode(NULL, tk);
+							xmlDocSetRootElement(xdoc, xroot);
+						} else {
 
-						if (att) {
-							if (IS(ATT) || ',' == c) { // Force the attribute
-								if (xc) {
-									if (att_is_string && st) {
-										xmlNewProp(xc, (xmlChar*)"id", att);
-										xmlNewProp(xc, (xmlChar*)"id", t);
-									} else if (att_is_string) {
-										xmlNewProp(xc, t, att);
-									} else {
-										xmlNewProp(xc, att, t);
-									}
-								}
-							}
-							free(att);
-							att = NULL;
-							att_is_string = 0;
-						} ELIF(ATT) {
-							char *metatext = NULL;
+							char *attr = NULL;
+
 							switch (tk[0]) {
-								case '.': case '#': case '@': case '[': case '~': 
-								case '=': case '^': case ':': case '!':
-									t += 1;
-									break;
-							}
-							switch (tk[0]) {
-								default:
+								case '\'':
 								case '"':
-									att = malloc(tklen);
-									att_is_string = st;
-									memcpy(att, t, tklen);
+									t += 1;
+									xmlAddChild(xc, xmlNewText(t));
 									break;
 								// TODO make this parameterized, characters and names.
-								case '.': metatext = "class"; break; 
-								case '#': metatext = "id"; break;
-								case '@': metatext = "project"; break;
-								case '/': t = tk; metatext = "href"; break;
-								case '[': metatext = "data"; break;
-								case '~': metatext = "duration"; break;
-								case '=': metatext = "location"; break;
-								case '^': metatext = "at"; break;
-								case ':': metatext = "type"; break;
-								case '!': metatext = "priority"; break;
-							}
-							if (metatext) xmlNewProp(xc, (xmlChar*)metatext, t);
-						} ELIF(DOC) {
-							regex_t re_doc;
-							if (regcomp(&re_doc, "^[?](xml|xupl)", REG_EXTENDED)) {
-								err(4, "Could not compile regex\n");
-								return xup;
-							}
-							regmatch_t pmatch[1];
-							process_element = regexec(&re_doc, (char*) tk, 1, pmatch, 0);
-							if (!process_element) {
-								/*
-								printf("matched %.*s from %lld to %lld\n",
-								    (int) (pmatch[0].rm_eo - pmatch[0].rm_so),
-								    &tk[pmatch[0].rm_so], pmatch[0].rm_so, pmatch[0].rm_eo);
-								*/
-								REQUIRE(ELE);
-							} else {
-								REQUIRE(ATT);
-							}
-						} ELIF(ELE) {
-							REQUIRE(ATT);
-							process_element = 1;
-						} else {
-							err(5, "UNK %s\n", tk);
-						}
-
-						if (process_element) {
-							if (!xc) {
-								xc = xroot = xmlNewNode(NULL, tk);
-								xmlDocSetRootElement(xdoc, xroot);
-							} else {
-								if ('"' == tk[0] || tk[0] == '\'') {
-									xmlAddChild(xc, xmlNewText(t));
-								} else {
+								case '.': attr = "class"; break; 
+								case '#': attr = "id"; break;
+								case '@': attr = "project"; break;
+								case '/': attr = "href"; break;
+								case '[': attr = "data"; break;
+								case '~': attr = "duration"; break;
+								case '=': attr = "location"; break;
+								case '^': attr = "at"; break;
+								case ':': attr = "type"; break;
+								case '!': attr = "priority"; break;
+								default:
 									xc = xmlNewChild(xc, NULL, tk, NULL );
+									break;
+							}
+
+							if (attr) {
+								switch (tk[0]) {
+									default: t += 1;
+									case '/': break;
 								}
+								xmlNewProp(xc, (xmlChar*)attr, t);
 							}
 						}
 
@@ -318,45 +282,39 @@ xupl* xupl_parse (xupl *xup) {
 							tksize /= 2;
 						}
 						tkndx = 0;
+
 					}
 
-					// These tokens require a specific state for the token.
 					switch (c) {
-						case '}':
-							if (xc) xc = xc->parent;
 						case '{':
-							if NOT(ATT|ELE|ST_) {
-								printf("STATE ERROR: Expected ELE [%04X], is [%04X]\n",ELE,_state);
-								continue;
+							xmlNewProp(xc, xuplAttr, xuplClosed);
+							continue;
+						case '}':
+							if (xc) {
+								xmlAttrPtr data = xmlHasProp(xc,xuplAttr);
+								if (data) xmlRemoveProp(data);
+								xc = xc->parent;
 							}
-							REQUIRE(ELE);
+							continue;
+						case ' ':
+						case '"':
+						case '\'':
+						case '\n':
+						case '\r':
+						case '\t':
+						case '\f':
+						case '\v':
+						case ',':
+							IF(STRING) break;
+							continue;
+						default:
 							break;
-							case ',':
-							if NOT(ATT|ST_) {
-								printf("STATE ERROR: Expected ATT [%04X], is [%04X]\n",ATT,_state);
-								continue;
-							}
-							break;
-							default: break;
 					}
-
-					continue;
-
-				case '\'':
-				case '"':
-					IF(ST_) {
-						DISABLE(STR(c));
-						continue;
-					} else {
-						ALLOW(STR(c));
-					}
-					break;
 
 				default:
-					DISABLE(WS_);
-					IF(INI) REQUIRE(PRE|DOC|ELE);
 					break;
 			}
+
 			// Accumulate the tk.
 			if (!tk || tkndx >= tksize) {
 				// If the tk buffer is too small, double it.
@@ -366,9 +324,17 @@ xupl* xupl_parse (xupl *xup) {
 		}
 	}
 
-	if (att) free(att);
+	// Remove remaining data-xupl.
+	while (xc) {
+		xmlAttrPtr data = xmlHasProp(xc,xuplAttr);
+		if (data) xmlRemoveProp(data);
+		xc = xc->parent;
+	}
+
 	if (tk) free(tk);
 	free(buf);
+
+	_->doc = xdoc;
 
 	return xup;
 }
