@@ -1,3 +1,4 @@
 xupl
 *.[ao]
 build/
+test/*.xml
