@@ -36,8 +36,8 @@ along with Xupl.  If not, see <http://www.gnu.org/licenses/>.
 #define REQUIRE(x) _state = (x)
 #define ALLOW(x) _state |= (x)
 #define DISABLE(x) (_state &= ~(x))
-#define STR(x) (x=='"'?DOUBLE_STRING:SINGLE_STRING)
-#define CMT(x) (x=='/'?LINE_COMMENT:MULTI_COMMENT)
+#define STR(x) (x=='"'?DOUBLE_STRING:(x=='\''?SINGLE_STRING:0))
+#define CMT(x) (x=='/'?LINE_COMMENT:(x=='*'?MULTI_COMMENT:0))
 #define IS(x) ((x) & _state)
 #define NOT(x) (!((x) & _state))
 #define IF(x) if IS(x)
@@ -203,7 +203,7 @@ xupl* xupl_parse (xupl *xup) {
 	const xmlChar* xuplClosed = (const xmlChar*) "closed";
 
 	xmlDocPtr xdoc = xmlNewDoc((const unsigned char*) "1.1");
-	//xmlNsPtr xuplNs = xmlNewGlobalNs(xdoc,"http://xupl.org","xupl");
+	//xmlNsPtr xuplNs = xmlNewGlobalNs(xdoc,"http://ns.xupl.org/1.1","xupl");
 
 	while ((chars_read = fread(buf, 1, buffsize, in)) > 0) {
 
@@ -214,6 +214,7 @@ xupl* xupl_parse (xupl *xup) {
 
 				case '\'':
 				case '"':
+					IF(COMMENT) break;
 					IF(STR(c)) {
 						DISABLE(STR(c));
 					} else if (NOT(STRING)) {
@@ -230,19 +231,49 @@ xupl* xupl_parse (xupl *xup) {
 				case '\f':
 				case '\v':
 				case ',':
+				case '*':
+				case '/':
 					IF(STRING) break;
 
 					if (tk) {
 						tk[tkndx] = 0;
 
+						char p = 0;
+						if (tkndx >= 1) p = tk[tkndx-1];
+						unsigned char* m = NULL;
+
 						unsigned int tklen = tkndx + 1;
 						unsigned char* t = tk;
 
-						if (!xc) {
-							xc = xroot = xmlNewNode(NULL, tk);
-							xmlDocSetRootElement(xdoc, xroot);
-						} else {
+						IF(COMMENT) {
+							if ('\n' == c && IS(LINE_COMMENT)) {
+								if (tkndx+1 < tksize) {
+									tk[tkndx++] = ' ';
+									tk[tkndx] = 0;
+								}
+							} else if ('*' == p && '/' == c && IS(MULTI_COMMENT)) {
+								tk[tkndx - 1] = 0;
+							} else break;
+							DISABLE(COMMENT);
+							m = tk;
+						} else if ('/' == p) {
+							ALLOW(CMT(c));
+							break;
+						}
 
+						printf("[%s]\n",tk);
+						if (!xc) {
+							if (m) {
+								printf("doc comment [%s]\n",tk);
+								xmlNewDocComment(xdoc,tk);
+							} else {
+								xc = xroot = xmlNewNode(NULL, tk);
+								xmlDocSetRootElement(xdoc, xroot);
+							}
+						} else if (m) {
+							m += 2;
+							xmlAddChild(xc, xmlNewComment(m));
+						} else {
 							char *attr = NULL;
 
 							switch (tk[0]) {
@@ -283,6 +314,7 @@ xupl* xupl_parse (xupl *xup) {
 						}
 						tkndx = 0;
 
+						if (m) continue;
 					}
 
 					switch (c) {
@@ -305,7 +337,6 @@ xupl* xupl_parse (xupl *xup) {
 						case '\f':
 						case '\v':
 						case ',':
-							IF(STRING) break;
 							continue;
 						default:
 							break;
