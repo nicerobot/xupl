@@ -61,7 +61,7 @@ xupl *xupl_init_with_file_pointer_and_buffer (FILE* in, off_t buffsize) {
 	static unsigned short _init = 0;
 	if (!_init) {
 		_init = 1;
-		if (regcomp(&re_word, "^[:_a-z][:_a-z0-9.-]+", REG_EXTENDED|REG_ICASE)) {
+		if (regcomp(&re_word, "^[:_a-zA-Z][:_a-zA-Z0-9.-]+", REG_EXTENDED|REG_ICASE)) {
 			err(4, "Could not compile regex\n");
 			return NULL;
 		}
@@ -198,6 +198,7 @@ xupl* xupl_parse (xupl *xup) {
 
 	xmlNodePtr xroot = NULL;
 	xmlNodePtr xc = NULL;
+	xmlAttrPtr xprop = NULL;
 
 	const xmlChar* xuplAttr = (const xmlChar*) "data-xupl";
 	const xmlChar* xuplClosed = (const xmlChar*) "closed";
@@ -234,6 +235,12 @@ xupl* xupl_parse (xupl *xup) {
 				case '*':
 				case '/':
 					IF(STRING) break;
+
+					switch (c) {
+						case ',':
+						case '{':
+						 	xprop = NULL;
+					}
 
 					if (tk) {
 						tk[tkndx] = 0;
@@ -274,6 +281,7 @@ xupl* xupl_parse (xupl *xup) {
 							xmlAddChild(xc, xmlNewComment(m));
 						} else {
 							char *attr = NULL;
+							xmlAttrPtr closed = xmlHasProp(xc,xuplAttr);
 
 							switch (tk[0]) {
 								case '\'':
@@ -292,8 +300,32 @@ xupl* xupl_parse (xupl *xup) {
 								case '^': attr = "at"; break;
 								case ':': attr = "type"; break;
 								case '!': attr = "priority"; break;
-								default:
-									xc = xmlNewChild(xc, NULL, tk, NULL );
+								default: {
+										regmatch_t pmatch[1];
+										unsigned int isword = 0 == regexec(&re_word, (char*) tk, 1, pmatch, 0);
+										if (closed) {
+											if (isword) {
+												xc = xmlNewChild(xc, NULL, tk, NULL );
+											} else {
+												xmlAddChild(xc, xmlNewText(tk));
+											}
+										} else {
+											if (xprop) {
+												xmlNewProp(xc, xprop->name, tk);
+												xmlRemoveProp(xprop);
+												xprop = NULL;
+											} else if (isword) {
+												xprop = xmlNewProp(xc, tk, (unsigned char*) "True");
+											} else {
+												xprop = xmlNewProp(xc, (unsigned char*) ".fake", tk);
+											}
+											switch (c) {
+												case ',':
+												case '{':
+												 	xprop = NULL;
+											}
+										}
+									}
 									break;
 							}
 
@@ -309,7 +341,11 @@ xupl* xupl_parse (xupl *xup) {
 									}
 									default: t += 1;
 								}
-								xmlNewProp(xc, (xmlChar*)attr, t);
+								if (closed) {
+									xmlAddChild(xc, xmlNewText(t));
+								} else {
+									xmlNewProp(xc, (xmlChar*)attr, t);
+								}
 							}
 						}
 
