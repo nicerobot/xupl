@@ -1,0 +1,13 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<html>
+  <head>
+    <title>XUPL</title>
+  </head>
+  <body>
+    <p id="name">Supple</p>
+    <p id="content">XUPL</p>
+    <p class="footer">
+      <Awesome/>
+    </p>
+  </body>
+</html>

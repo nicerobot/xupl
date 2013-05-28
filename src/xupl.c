@@ -255,23 +255,22 @@ xupl* xupl_parse (xupl *xup) {
 								tk[tkndx - 1] = 0;
 							} else break;
 							DISABLE(COMMENT);
-							m = tk;
-						} else if ('/' == p) {
+							m = tk + 2;
+						} else if ('/' == p && ('/' == c || '*' == c)) {
 							ALLOW(CMT(c));
 							break;
-						}
+						} else if ('/' == c || '*' == c) break;
 
-						printf("[%s]\n",tk);
 						if (!xc) {
 							if (m) {
-								printf("doc comment [%s]\n",tk);
-								xmlNewDocComment(xdoc,tk);
-							} else {
-								xc = xroot = xmlNewNode(NULL, tk);
+								xroot = xmlNewDocComment(xdoc,m);
 								xmlDocSetRootElement(xdoc, xroot);
+							} else {
+								xc = xmlNewNode(NULL, tk);
+								xmlDocSetRootElement(xdoc, xc);
+								if (!xroot) xroot = xc;
 							}
 						} else if (m) {
-							m += 2;
 							xmlAddChild(xc, xmlNewComment(m));
 						} else {
 							char *attr = NULL;
@@ -299,9 +298,16 @@ xupl* xupl_parse (xupl *xup) {
 							}
 
 							if (attr) {
+								const int nx = tkndx +2;
+								char v[nx];
 								switch (tk[0]) {
+									case '/': {
+										strcpy(v+1,(char*)tk);
+										v[0] = '/';
+										t = (unsigned char*)v;
+										break;
+									}
 									default: t += 1;
-									case '/': break;
 								}
 								xmlNewProp(xc, (xmlChar*)attr, t);
 							}

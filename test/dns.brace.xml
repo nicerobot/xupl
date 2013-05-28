@@ -1,0 +1,15 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!-- http://bouncybouncy.net/ramblings/posts/thrift_and_protocol_buffers/="*/" package="passive_dns"-->
+<package passive_dns="True">
+  <message DnsRecord="True">
+    <key required="True" string="True"/>
+    <value required="True" string="True"/>
+    <first required="True" string="True"/>
+    <last required="True" string="True"/>
+    <type optional="True" string="True" default="True" string="A&quot;"/>
+    <ttl optional="True" int32="True" default="True"/>
+  </message>
+  <message DnsResponse="True">
+    <records repeated="True" DnsRecord="True"/>
+  </message>
+</package>
