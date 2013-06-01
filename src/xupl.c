@@ -269,11 +269,11 @@ xupl* xupl_parse(xupl *xup) {
 							DISABLE(COMMENT);
 							m = tk + 2;
 						} else if ('/' == p && '*' == c) {
-							ALLOW(CMT(c));
+							ALLOW(MULTI_COMMENT);
 							break;
 						// Single-line comments can be #! #* #/ ##
 						} else if ('#' == p && ('!' == c || '*' == c || '/' == c || '#' == c)) {
-							ALLOW(CMT('#'));
+							ALLOW(LINE_COMMENT);
 							break;
 						// If these characters were in the token and not part of a comment,
 						// then continue as if they are normal characters of a token.
@@ -360,31 +360,21 @@ xupl* xupl_parse(xupl *xup) {
 						if (m) continue;
 					}
 
-					switch (c) {
-						case '{':
-							xmlNewProp(xc, xuplAttr, xuplClosed);
-							continue;
-						case '}':
-							if (xc) {
-								xmlAttrPtr data = xmlHasProp(xc, xuplAttr);
-								if (data) xmlRemoveProp(data);
-								xc = xc->parent;
-							}
-							continue;
-						case ' ':
-						case '"':
-						case '\'':
-						case '\n':
-						case '\r':
-						case '\t':
-						case '\f':
-						case '\v':
-						case ',':
-							continue;
-						default:
-							break;
-					}
+				default:
+					break;
+			}
 
+			switch (c) {
+				case '{':
+					xmlNewProp(xc, xuplAttr, xuplClosed);
+					continue;
+				case '}':
+					if (xc) {
+						xmlAttrPtr data = xmlHasProp(xc, xuplAttr);
+						if (data) xmlRemoveProp(data);
+						xc = xc->parent;
+					}
+					continue;
 				default:
 					break;
 			}

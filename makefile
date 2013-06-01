@@ -16,36 +16,34 @@
 # along with Xupl.  If not, see <http://www.gnu.org/licenses/>.
 
 .PHONY : clean test check run all enter finish leave dot push
-M?=bump
+M ?= bump
 
-test: exe
+test: app lib
 	@cd test; make
 
-exe: build .log xupl
+exe app: xupl up
 
-libxupl.a: build/xupl.o build/main.o
+lib: libxupl.a
+
+xupl: libxupl.a src/test.o
+	@date +v0.1+%y%j.%H%M | tee VERSION.txt
+	@cc -o $@ $^ `xml2-config --libs`
+
+up: src/xupl.l.o
+	cc -ll -o $@ $^ `xml2-config --libs`
+
+libxupl.a: src/xupl.o src/main.o
 	@ar rvs $@ $^
 
-xupl: libxupl.a build/test.o
-	@date +v0.1+%y%j.%H%M | tee VERSION.txt
-	@cc -o $@ $^ `xml2-config --libs` 2>&1 | tee .log/ld-xupl.out
-
-build:
-	@mkdir build
-
-build/%.o: src/%.c ; @cc -c -std=gnu99 -Iinclude `xml2-config --cflags` -o $@ $^ 2>&1 | tee -a .log/cc-xupl.out
+src/%.o:
+	@cd src; make $^
 
 check: test
 
-clean: .log
-	@make rm 2>&1 | tee .log/clean.out
-
-rm:
-	@rm -vfr build *.a *.c *.dot *.png xupl
+clean:
+	@cd src; make clean
 	@cd test; make clean
-
-.log:
-	@mkdir .log
+	@rm -vfr *.a *.c *.dot *.png xupl *.h *.l.c
 
 bump:
 	@make clean
