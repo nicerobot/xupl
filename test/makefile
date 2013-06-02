@@ -15,16 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with Xupl.  If not, see <http://www.gnu.org/licenses/>.
 
+EXE?=xupl
 XUPL=$(wildcard *.xupl)
 XML=$(notdir $(wildcard expect/*.xml))
 
 .PHONY: xmls test clean missing output
 
-test: ../xupl README.md
+test: ../$(EXE) README.md
 	@cat README.md
 	@head -1 README.md
 
-../xupl:
+testup: ../$(EXE)
+	@make html.brace.xml
+
+../$(EXE):
 	@cd ..; make exe
 
 README.md: ../VERSION.txt
@@ -37,15 +41,15 @@ output:
 	@make --quiet missing
 
 clean:
-	@rm -vf *.xml README.md
+	@rm -vf *.xml *.l.c README.md
 
-xmls: ../xupl $(XML)
+xmls: ../$(EXE) $(XML)
 
 %.xml: %.xupl;
 	@printf '\n# [%s](%s)\n\ninput:\n\n' $^ $^
 	@cat $^ | sed 's/^/    /'
 	@printf '\n\noutput:\n\n'
-	@../xupl $^ | tee $(notdir $@) | sed 's/^/    /'
+	@cat $^ | ../$(EXE) | tee $(notdir $@) | sed 's/^/    /'
 	@printf '\n\n'
 	@diff $@ expect/$@ | sed 's/^/    /'
 

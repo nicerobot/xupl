@@ -32,6 +32,9 @@ xupl: libxupl.a src/test.o
 up: src/xupl.l.o
 	cc -ll -o $@ $^ `xml2-config --libs`
 
+tup:
+	@cd test; make testup EXE=up
+
 libxupl.a: src/xupl.o src/main.o
 	@ar rvs $@ $^
 
@@ -43,7 +46,7 @@ check: test
 clean:
 	@cd src; make clean
 	@cd test; make clean
-	@rm -vfr *.a *.c *.dot *.png xupl *.h *.l.c
+	@rm -vfr *.a *.c *.dot *.png xupl up *.h *.l.c
 
 bump:
 	@make clean
