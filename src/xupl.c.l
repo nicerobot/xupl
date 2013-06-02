@@ -26,17 +26,19 @@ typedef struct xupl_ {
 	xmlNodePtr c;
 	xmlAttrPtr prop;
 	unsigned char* acc;
+	unsigned char quote;
+	unsigned short prior;
 } xupl_;
 
 #define YY_EXTRA_TYPE xupl_*
 
 %}
 
-%s DOCUMENT MULTI_COMMENT ELEMENT_STRING ELEMENT ATTRIBUTE BODY
+%s MULTI_COMMENT SINGLE_STRING DOUBLE_STRING ELEMENT ATTRIBUTE BODY
 
 %%
 <INITIAL>"?xupl" {
-	BEGIN(DOCUMENT); }
+	BEGIN(ELEMENT); }
 
 <MULTI_COMMENT>{
 "*/" {
@@ -47,7 +49,7 @@ typedef struct xupl_ {
 	}
 	free(yyextra->acc);
 	yyextra->acc = NULL;
-	BEGIN(DOCUMENT); }
+	BEGIN(yyextra->prior); }
 
 "*"|[^*\n]+ {
 	strcat((char*)yyextra->acc,yytext); }
@@ -58,14 +60,23 @@ typedef struct xupl_ {
 
 }
 
-<ELEMENT_STRING>{
+<SINGLE_STRING,DOUBLE_STRING>{
 "\""|"'" {
-	xmlAddChild(yyextra->c, xmlNewText(yyextra->acc));
-	free(yyextra->acc);
-	yyextra->acc = NULL;
-	BEGIN(ELEMENT); }
+	unsigned short state = (yyg->yy_start - 1)/2;
 
-[^""\n]+ {
+	if ((state == SINGLE_STRING && 39 != yytext[0])
+	    || (state == DOUBLE_STRING && 34 != yytext[0])) {
+		strcat((char*)yyextra->acc,yytext);
+	} else {
+		xmlAddChild(yyextra->c, xmlNewText(yyextra->acc));
+		free(yyextra->acc);
+		yyextra->acc = NULL;
+		BEGIN(yyextra->prior);
+	}
+
+}
+
+[^""'\n]+ {
 	strcat((char*)yyextra->acc,yytext); }
 
 \n {
@@ -85,30 +96,35 @@ typedef struct xupl_ {
 <*>[/][*] {
 	yyextra->acc = realloc(yyextra->acc, 200);
 	yyextra->acc[0] = 0;
+	yyextra->prior = (yyg->yy_start - 1)/2;
 	BEGIN(MULTI_COMMENT); }
 
-<ELEMENT>"\""|"'" {
+<*>[""'] {
 	yyextra->acc = realloc(yyextra->acc, 200);
 	yyextra->acc[0] = 0;
-	BEGIN(ELEMENT_STRING); }
+	yyextra->prior = (yyg->yy_start - 1)/2;
+	if ('\'' == yytext[0]) BEGIN(SINGLE_STRING);
+	else BEGIN(DOUBLE_STRING);
+}
 
 <ELEMENT,ATTRIBUTE>[{] {
 	BEGIN(ELEMENT); }
 
-<DOCUMENT,ELEMENT,BODY>[}] {
+<ELEMENT>[}] {
 		yyextra->c = yyextra->c->parent;
 	}
 
-<DOCUMENT>[ ]+ {
-	}
+<ELEMENT>[ ]+ {
+	BEGIN(ATTRIBUTE); }
 
-<DOCUMENT>[\t]+ {
-	}
+<ELEMENT>[\t]+ {
+	BEGIN(ATTRIBUTE); }
 
-<DOCUMENT>[\n\v\f\r]+ {
-	yylineno++; }
+<ELEMENT>[\n\v\f\r]+ {
+	yylineno++;
+	BEGIN(ATTRIBUTE); }
 
-<INITIAL,ELEMENT>[:_a-zA-Z][:_a-zA-Z0-9.-]+ {
+<INITIAL,ELEMENT>[:_a-zA-Z][:_a-zA-Z0-9.-]* {
 	if (!(yyextra->c)) {
 		yyextra->root = yyextra->c = xmlNewNode(NULL, (unsigned char*) yytext);
 		xmlDocSetRootElement(yyextra->doc, yyextra->root);		
@@ -117,13 +133,32 @@ typedef struct xupl_ {
 	BEGIN(ATTRIBUTE);
 }
 
-<ATTRIBUTE>[:_a-zA-Z][:_a-zA-Z0-9.-]+ {
+<ATTRIBUTE>[:_a-zA-Z][:_a-zA-Z0-9.-]* {
 	if (yyextra->c) {
 		xmlNewProp(yyextra->c, (unsigned char*)yytext, (unsigned char*) "True");
 	}
 }
 
-<DOCUMENT>[^\n\f\v\r\t ,:.\{\}\[\]\(\)\#\\/]+ {
+<ATTRIBUTE>[#][:_a-zA-Z][:_a-zA-Z0-9.-]* {
+	if (yyextra->c) {
+		xmlNewProp(yyextra->c, (unsigned char*)"id", (unsigned char*)(yytext+1));
+	}
+}
+
+<ATTRIBUTE>[.][^ \{\t\n]+ {
+	if (yyextra->c) {
+		xmlNewProp(yyextra->c, (unsigned char*)"class", (unsigned char*)(yytext+1));
+	}
+}
+
+<ATTRIBUTE>[!][^ \t\n]+ {
+	if (yyextra->c) {
+		xmlNewProp(yyextra->c, (unsigned char*)"priority", (unsigned char*)(yytext+1));
+	}
+}
+
+<*>[^\n\f\v\r\t ,""'!:.\{\}\#\\/]+ {
+		printf("%d[%s]\n", (yyg->yy_start-1)/2, yytext);
 	}
 
 %%
