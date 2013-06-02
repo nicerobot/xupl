@@ -110,7 +110,7 @@ typedef struct xupl_ {
 <ELEMENT,ATTRIBUTE>[{] {
 	BEGIN(ELEMENT); }
 
-<ELEMENT>[}] {
+<ELEMENT,ATTRIBUTE>[}] {
 		yyextra->c = yyextra->c->parent;
 	}
 
