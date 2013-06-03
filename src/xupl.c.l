@@ -42,8 +42,11 @@ typedef struct xupl_ {
 
 <MULTI_COMMENT>{
 "*/" {
-	if (yyextra->doc) {
-		xmlNewDocComment(yyextra->doc, yyextra->acc);
+	if (!(yyextra->root)) {
+		yyextra->root = xmlNewDocComment(yyextra->doc, yyextra->acc);
+		xmlDocSetRootElement(yyextra->doc, yyextra->root);
+	} else if (!(yyextra->c)) {
+    xmlAddSibling(yyextra->root,xmlNewDocComment(yyextra->doc, yyextra->acc));
 	} else {
 		xmlAddChild(yyextra->c, xmlNewComment(yyextra->acc));
 	}
@@ -86,8 +89,11 @@ typedef struct xupl_ {
 }
 
 <*>[#][!][^\n]+ {
-	if (yyextra->doc) {
-		xmlNewDocComment(yyextra->doc, (unsigned char*)(yytext+2));
+	if (!(yyextra->root)) {
+		yyextra->root = xmlNewDocComment(yyextra->doc, (unsigned char*)(yytext+2));
+		xmlDocSetRootElement(yyextra->doc, yyextra->root);
+	} else if (!(yyextra->c)) {
+    xmlAddSibling(yyextra->root,xmlNewDocComment(yyextra->doc, (unsigned char*)(yytext+2)));
 	} else {
 		xmlAddChild(yyextra->c, xmlNewComment((unsigned char*)(yytext+2)));
 	}
@@ -107,29 +113,22 @@ typedef struct xupl_ {
 	else BEGIN(DOUBLE_STRING);
 }
 
-<ELEMENT,ATTRIBUTE>[{] {
+<ATTRIBUTE>[{] {
 	BEGIN(ELEMENT); }
 
-<ELEMENT,ATTRIBUTE>[}] {
-		yyextra->c = yyextra->c->parent;
-	}
+<ELEMENT>[}] {
+	yyextra->c = yyextra->c->parent;
+	BEGIN(ELEMENT); }
 
-<ELEMENT>[ ]+ {
-	BEGIN(ATTRIBUTE); }
-
-<ELEMENT>[\t]+ {
-	BEGIN(ATTRIBUTE); }
-
-<ELEMENT>[\n\v\f\r]+ {
-	yylineno++;
-	BEGIN(ATTRIBUTE); }
+<ATTRIBUTE>[ \t]+
 
 <INITIAL,ELEMENT>[:_a-zA-Z][:_a-zA-Z0-9.-]* {
 	if (!(yyextra->c)) {
 		yyextra->root = yyextra->c = xmlNewNode(NULL, (unsigned char*) yytext);
 		xmlDocSetRootElement(yyextra->doc, yyextra->root);		
+	} else {
+		yyextra->c = xmlNewChild(yyextra->c, NULL, (unsigned char*) yytext, NULL);
 	}
-	yyextra->c = xmlNewChild(yyextra->c, NULL, (unsigned char*) yytext, NULL);
 	BEGIN(ATTRIBUTE);
 }
 
@@ -157,9 +156,12 @@ typedef struct xupl_ {
 	}
 }
 
-<*>[^\n\f\v\r\t ,""'!:.\{\}\#\\/]+ {
-		printf("%d[%s]\n", (yyg->yy_start-1)/2, yytext);
-	}
+<*>. {
+}
+
+<*>[\n\v\f\r]+ {
+	yylineno++;
+}
 
 %%
 
@@ -172,8 +174,7 @@ int main () {
 
 	yylex_init_extra(&X, &scanner);
 
-	while ((tok=yylex(scanner)) > 0)
-	   printf("tok=%d  yytext=%s\n", tok, yyget_text(scanner));
+	while (yylex(scanner) > 0) yyget_text(scanner);
 
 	yylex_destroy(scanner);
 	xmlSaveFormatFileEnc("-", X.doc, (const char*) "UTF-8", 1);

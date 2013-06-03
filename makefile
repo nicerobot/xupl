@@ -18,24 +18,24 @@
 .PHONY : clean test check run all enter finish leave dot push
 M ?= bump
 
-test: app lib
+test: app
 	@cd test; make
 
-exe app: xupl up
+%.xml: app
+	cd test; make $@
+
+exe app: xupl
 
 lib: libxupl.a
 
-xupl: libxupl.a src/test.o
-	@date +v0.1+%y%j.%H%M | tee VERSION.txt
+xupl_: libxupl.a src/test.o
 	@cc -o $@ $^ `xml2-config --libs`
 
-up: src/xupl.l.o
+xupl: src/xupl.l.o
+	@date +v0.1+%y%j.%H%M | tee VERSION.txt
 	cc -ll -o $@ $^ `xml2-config --libs`
 
-tup:
-	@cd test; make testup EXE=up
-
-libxupl.a: src/xupl.o src/main.o
+libxupl.a: src/xupl.l.o src/main.o
 	@ar rvs $@ $^
 
 src/%.o:
@@ -46,7 +46,7 @@ check: test
 clean:
 	@cd src; make clean
 	@cd test; make clean
-	@rm -vfr *.a *.c *.dot *.png xupl up *.h *.l.c
+	@rm -vfr *.a *.c *.dot *.png xupl xupl_ up *.h *.l.c
 
 bump:
 	@make clean

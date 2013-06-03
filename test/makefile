@@ -25,9 +25,6 @@ test: ../$(EXE) README.md
 	@cat README.md
 	@head -1 README.md
 
-testup: ../$(EXE)
-	@make html.brace.xml
-
 ../$(EXE):
 	@cd ..; make exe
 
@@ -49,7 +46,7 @@ xmls: ../$(EXE) $(XML)
 	@printf '\n# [%s](%s)\n\ninput:\n\n' $^ $^
 	@cat $^ | sed 's/^/    /'
 	@printf '\n\noutput:\n\n'
-	@cat $^ | ../$(EXE) | tee $(notdir $@) | sed 's/^/    /'
+	@cat $^| ../$(EXE) 2>&1 | tee $(notdir $@) | sed 's/^/    /'
 	@printf '\n\n'
 	@diff $@ expect/$@ | sed 's/^/    /'
 
