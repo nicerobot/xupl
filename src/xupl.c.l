@@ -113,6 +113,8 @@ typedef struct xupl_ {
 	else BEGIN(DOUBLE_STRING);
 }
 
+<ATTRIBUTE>[,]
+
 <ATTRIBUTE>[{] {
 	BEGIN(ELEMENT); }
 
@@ -138,9 +140,45 @@ typedef struct xupl_ {
 	}
 }
 
+<ATTRIBUTE>[""][^""]+[""] {
+	if (yyextra->c) {
+		xmlNewProp(yyextra->c, (unsigned char*)"string", (unsigned char*)(yytext+1));
+	}
+}
+
+<ATTRIBUTE>[-+][0-9][0-9.e+-] {
+	if (yyextra->c) {
+		xmlNewProp(yyextra->c, (unsigned char*)"number", (unsigned char*)(yytext+1));
+	}
+}
+
+<ATTRIBUTE>[\[][^ \{\t\n]+ {
+	if (yyextra->c) {
+		xmlNewProp(yyextra->c, (unsigned char*)"data", (unsigned char*)(yytext+1));
+	}
+}
+
 <ATTRIBUTE>[#][:_a-zA-Z][:_a-zA-Z0-9.-]* {
 	if (yyextra->c) {
 		xmlNewProp(yyextra->c, (unsigned char*)"id", (unsigned char*)(yytext+1));
+	}
+}
+
+<ATTRIBUTE>[\^][^ \{\t\n]+ {
+	if (yyextra->c) {
+		xmlNewProp(yyextra->c, (unsigned char*)"date", (unsigned char*)(yytext+1));
+	}
+}
+
+<ATTRIBUTE>[=][^ \{\t\n]+ {
+	if (yyextra->c) {
+		xmlNewProp(yyextra->c, (unsigned char*)"geo", (unsigned char*)(yytext+1));
+	}
+}
+
+<ATTRIBUTE>[:][^ \{\t\n]+ {
+	if (yyextra->c) {
+		xmlNewProp(yyextra->c, (unsigned char*)"style", (unsigned char*)(yytext+1));
 	}
 }
 
