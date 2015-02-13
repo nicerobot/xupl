@@ -1,4 +1,4 @@
-[![Build Status](https://buildhive.cloudbees.com/job/nicerobot/job/xupl/badge/icon)](https://buildhive.cloudbees.com/job/nicerobot/job/xupl/)
+[![Build Status](https://buildhive.cloudbees.com/job/nicerobot/job/xupl/badge/icon)](https://buildhive.cloudbees.com/job/nicerobot/job/xupl/) [![endorse](https://api.coderwall.com/nicerobot/endorsecount.png)](https://coderwall.com/nicerobot)
 
 # See the [`xupl`](https://github.com/nicerobot/xupl/wiki) wiki
 
