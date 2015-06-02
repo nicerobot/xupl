@@ -99,11 +99,8 @@ xupl *xupl_init_with_file_pointer(FILE* in) {
 }
 
 xupl *xupl_init(int argc, char *argv[]) {
-	int atty = isatty(0);
-	if (argc <= 1 && atty) return NULL;
-
 	xupl* xup = NULL;
-	if (!atty) {
+	if (argc <= 1) {
 		xup = xupl_init_with_file_pointer_and_buffer(stdin, 32 * 1024);
 	} else {
 		xup = xupl_init_with_file_name(argv[1]);
