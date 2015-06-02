@@ -2,3 +2,4 @@ xupl
 *.[ao]
 build/
 test/*.xml
+nbproject/

@@ -1,11 +1,11 @@
-// single line
+#!/usr/bin/env /Users/Shared/Development/github/xupl/v1/xupl
 /* multi
 line */
 note {
-// single line
+#! single line
 /* multi
 line */
 }
-// single line
+#! single line
 /* multi
 line */

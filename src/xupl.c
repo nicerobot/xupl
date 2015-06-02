@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with Xupl.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -37,7 +37,7 @@ along with Xupl.  If not, see <http://www.gnu.org/licenses/>.
 #define ALLOW(x) _state |= (x)
 #define DISABLE(x) (_state &= ~(x))
 #define STR(x) (x=='"'?DOUBLE_STRING:(x=='\''?SINGLE_STRING:0))
-#define CMT(x) (x=='/'?LINE_COMMENT:(x=='*'?MULTI_COMMENT:0))
+#define CMT(x) (x=='#'?LINE_COMMENT:(x=='*'?MULTI_COMMENT:0))
 #define IS(x) ((x) & _state)
 #define NOT(x) (!((x) & _state))
 #define IF(x) if IS(x)
@@ -57,44 +57,44 @@ void xupl_user_done(xmlDocPtr doc);
 
 static regex_t re_word;
 
-xupl *xupl_init_with_file_pointer_and_buffer (FILE* in, off_t buffsize) {
+xupl *xupl_init_with_file_pointer_and_buffer(FILE* in, off_t buffsize) {
 	static unsigned short _init = 0;
 	if (!_init) {
 		_init = 1;
-		if (regcomp(&re_word, "^[:_a-zA-Z][:_a-zA-Z0-9.-]+", REG_EXTENDED|REG_ICASE)) {
+		if (regcomp(&re_word, "^[:_a-zA-Z][:_a-zA-Z0-9.-]+", REG_EXTENDED | REG_ICASE)) {
 			err(4, "Could not compile regex\n");
 			return NULL;
 		}
 	}
-	xupl_* xup = (xupl_*) malloc(sizeof(xupl_));
+	xupl_* xup = (xupl_*) malloc(sizeof (xupl_));
 	xup->doc = NULL;
 	xup->in = in;
 	xup->buffsize = buffsize;
 	xup->status = 0;
 	xup->done = xupl_user_done;
-	return (xupl*)xup;
+	return (xupl*) xup;
 }
 
-xupl *xupl_init_with_file_descriptor_and_buffer (int fd, off_t buffsize) {
+xupl *xupl_init_with_file_descriptor_and_buffer(int fd, off_t buffsize) {
 	struct stat fs;
 	if (fstat(fd, &fs) == -1) {
 		err(3, "stat: %d", fd);
-		fs.st_size = 32*1024;
+		fs.st_size = 32 * 1024;
 	}
-	xupl *xup = xupl_init_with_file_pointer_and_buffer(fdopen(fd, "r"),fs.st_size);
+	xupl *xup = xupl_init_with_file_pointer_and_buffer(fdopen(fd, "r"), fs.st_size);
 
 	return xup;
 }
 
-xupl *xupl_init_with_file_descriptor (int fd) {
-	return xupl_init_with_file_descriptor_and_buffer(fd,32*1024);
+xupl *xupl_init_with_file_descriptor(int fd) {
+	return xupl_init_with_file_descriptor_and_buffer(fd, 32 * 1024);
 }
 
-xupl *xupl_init_with_file_name (char* fn) {
+xupl *xupl_init_with_file_name(char* fn) {
 	return xupl_init_with_file_descriptor(open(fn, O_RDONLY));
 }
 
-xupl *xupl_init_with_file_pointer (FILE* in) {
+xupl *xupl_init_with_file_pointer(FILE* in) {
 	return xupl_init_with_file_descriptor(fileno(in));
 }
 
@@ -104,7 +104,7 @@ xupl *xupl_init(int argc, char *argv[]) {
 
 	xupl* xup = NULL;
 	if (!atty) {
-		xup = xupl_init_with_file_pointer_and_buffer(stdin,32*1024);
+		xup = xupl_init_with_file_pointer_and_buffer(stdin, 32 * 1024);
 	} else {
 		xup = xupl_init_with_file_name(argv[1]);
 	}
@@ -124,11 +124,11 @@ xupl *xupl_cleanup(xupl *xup) {
 }
 
 xupl *xupl_nestv(xupl *xup, va_list args) {
-	xupf f=va_arg(args, xupf);
+	xupf f = va_arg(args, xupf);
 	if (f) {
-		xup = f(xupl_nestv(xup,args));
+		xup = f(xupl_nestv(xup, args));
 	}
-  return xup;
+	return xup;
 }
 
 xupl *xupl_nest(xupl *xup, ...) {
@@ -136,14 +136,14 @@ xupl *xupl_nest(xupl *xup, ...) {
 	va_start(args, xup);
 	xup = xupl_nestv(xup, args);
 	va_end(args);
-  return xup;
+	return xup;
 }
 
 xupl *xupl_chainv(xupl *xup, va_list args) {
-	for(xupf f=va_arg(args, xupf); f; f=va_arg(args, xupf)) {
-		xup=f(xup);
+	for (xupf f = va_arg(args, xupf); f; f = va_arg(args, xupf)) {
+		xup = f(xup);
 	}
-  return xup;
+	return xup;
 }
 
 xupl *xupl_chain(xupl *xup, ...) {
@@ -151,10 +151,10 @@ xupl *xupl_chain(xupl *xup, ...) {
 	va_start(args, xup);
 	xup = xupl_chainv(xup, args);
 	va_end(args);
-  return xup;
+	return xup;
 }
 
-xupl *xupl_done (xupl *xup) {
+xupl *xupl_done(xupl *xup) {
 	int status = 1;
 	if (xup) {
 		xupl_*_ = (xupl_*) xup;
@@ -168,7 +168,7 @@ xupl *xupl_done (xupl *xup) {
 	return NULL;
 }
 
-xupl* xupl_parse (xupl *xup) {
+xupl* xupl_parse(xupl *xup) {
 
 	xupl_*_ = (xupl_*) xup;
 	FILE* in = _->in;
@@ -216,6 +216,7 @@ xupl* xupl_parse (xupl *xup) {
 				case '\'':
 				case '"':
 					IF(COMMENT) break;
+
 					IF(STR(c)) {
 						DISABLE(STR(c));
 					} else if (NOT(STRING)) {
@@ -232,21 +233,25 @@ xupl* xupl_parse (xupl *xup) {
 				case '\f':
 				case '\v':
 				case ',':
+				case '=':
+				// Comment characters
 				case '*':
 				case '/':
+				case '#':
+				case '!':
 					IF(STRING) break;
 
 					switch (c) {
 						case ',':
 						case '{':
-						 	xprop = NULL;
+							xprop = NULL;
 					}
 
 					if (tk) {
 						tk[tkndx] = 0;
 
 						char p = 0;
-						if (tkndx >= 1) p = tk[tkndx-1];
+						if (tkndx >= 1) p = tk[tkndx - 1];
 						unsigned char* m = NULL;
 
 						unsigned int tklen = tkndx + 1;
@@ -254,7 +259,7 @@ xupl* xupl_parse (xupl *xup) {
 
 						IF(COMMENT) {
 							if ('\n' == c && IS(LINE_COMMENT)) {
-								if (tkndx+1 < tksize) {
+								if (tkndx + 1 < tksize) {
 									tk[tkndx++] = ' ';
 									tk[tkndx] = 0;
 								}
@@ -263,14 +268,20 @@ xupl* xupl_parse (xupl *xup) {
 							} else break;
 							DISABLE(COMMENT);
 							m = tk + 2;
-						} else if ('/' == p && ('/' == c || '*' == c)) {
+						} else if ('/' == p && '*' == c) {
 							ALLOW(CMT(c));
 							break;
-						} else if ('/' == c || '*' == c) break;
+						// Single-line comments can be #! #* #/ ##
+						} else if ('#' == p && ('!' == c || '*' == c || '/' == c || '#' == c)) {
+							ALLOW(CMT('#'));
+							break;
+						// If these characters were in the token and not part of a comment,
+						// then continue as if they are normal characters of a token.
+						} else if ('!' == c || '/' == c || '*' == c || '#' == c) break;
 
 						if (!xc) {
 							if (m) {
-								xroot = xmlNewDocComment(xdoc,m);
+								xroot = xmlNewDocComment(xdoc, m);
 								xmlDocSetRootElement(xdoc, xroot);
 							} else {
 								xc = xmlNewNode(NULL, tk);
@@ -281,7 +292,7 @@ xupl* xupl_parse (xupl *xup) {
 							xmlAddChild(xc, xmlNewComment(m));
 						} else {
 							char *attr = NULL;
-							xmlAttrPtr closed = xmlHasProp(xc,xuplAttr);
+							xmlAttrPtr closed = xmlHasProp(xc, xuplAttr);
 
 							switch (tk[0]) {
 								case '\'':
@@ -289,62 +300,52 @@ xupl* xupl_parse (xupl *xup) {
 									t += 1;
 									xmlAddChild(xc, xmlNewText(t));
 									break;
-								// TODO make this parameterized, characters and names.
-								case '.': attr = "class"; break; 
-								case '#': attr = "id"; break;
-								case '@': attr = "project"; break;
-								case '/': attr = "href"; break;
-								case '[': attr = "data"; break;
+									// TODO make this parameterized, characters and names.
+								case '.': attr = "class";    break;
+								case '#': attr = "id";       break;
+								case '@': attr = "project";  break;
+								case '/': attr = "href";     break;
+								case '[': attr = "data";     break;
 								case '~': attr = "duration"; break;
 								case '=': attr = "location"; break;
-								case '^': attr = "at"; break;
-								case ':': attr = "type"; break;
+								case '^': attr = "at";       break;
+								case ':': attr = "type";     break;
 								case '!': attr = "priority"; break;
-								default: {
-										regmatch_t pmatch[1];
-										unsigned int isword = 0 == regexec(&re_word, (char*) tk, 1, pmatch, 0);
-										if (closed) {
-											if (isword) {
-												xc = xmlNewChild(xc, NULL, tk, NULL );
-											} else {
-												xmlAddChild(xc, xmlNewText(tk));
-											}
+								default:
+								{
+									regmatch_t pmatch[1];
+									unsigned int isword = 0 == regexec(&re_word, (char*) tk, 1, pmatch, 0);
+									if (closed) {
+										if (isword) {
+											xc = xmlNewChild(xc, NULL, tk, NULL);
 										} else {
-											if (xprop) {
-												xmlNewProp(xc, xprop->name, tk);
-												xmlRemoveProp(xprop);
+											xmlAddChild(xc, xmlNewText(tk));
+										}
+									} else {
+										if (xprop) {
+											xmlNewProp(xc, xprop->name, tk);
+											xmlRemoveProp(xprop);
+											xprop = NULL;
+										} else if (isword) {
+											xprop = xmlNewProp(xc, tk, (unsigned char*) "True");
+										} else {
+											xprop = xmlNewProp(xc, (unsigned char*) ".fake", tk);
+										}
+										switch (c) {
+											case ',':
+											case '{':
 												xprop = NULL;
-											} else if (isword) {
-												xprop = xmlNewProp(xc, tk, (unsigned char*) "True");
-											} else {
-												xprop = xmlNewProp(xc, (unsigned char*) ".fake", tk);
-											}
-											switch (c) {
-												case ',':
-												case '{':
-												 	xprop = NULL;
-											}
 										}
 									}
+								}
 									break;
 							}
 
 							if (attr) {
-								const int nx = tkndx +2;
-								char v[nx];
-								switch (tk[0]) {
-									case '/': {
-										strcpy(v+1,(char*)tk);
-										v[0] = '/';
-										t = (unsigned char*)v;
-										break;
-									}
-									default: t += 1;
-								}
 								if (closed) {
 									xmlAddChild(xc, xmlNewText(t));
 								} else {
-									xmlNewProp(xc, (xmlChar*)attr, t);
+									xmlNewProp(xc, (xmlChar*) attr, t);
 								}
 							}
 						}
@@ -365,7 +366,7 @@ xupl* xupl_parse (xupl *xup) {
 							continue;
 						case '}':
 							if (xc) {
-								xmlAttrPtr data = xmlHasProp(xc,xuplAttr);
+								xmlAttrPtr data = xmlHasProp(xc, xuplAttr);
 								if (data) xmlRemoveProp(data);
 								xc = xc->parent;
 							}
@@ -399,7 +400,7 @@ xupl* xupl_parse (xupl *xup) {
 
 	// Remove remaining data-xupl.
 	while (xc) {
-		xmlAttrPtr data = xmlHasProp(xc,xuplAttr);
+		xmlAttrPtr data = xmlHasProp(xc, xuplAttr);
 		if (data) xmlRemoveProp(data);
 		xc = xc->parent;
 	}
@@ -413,9 +414,9 @@ xupl* xupl_parse (xupl *xup) {
 }
 
 void Xupl(int argc, char *argv[], xupd d, xupf f, ...) {
-	xupl* _ = xupl_init(argc,argv);
+	xupl* _ = xupl_init(argc, argv);
 	xupl_parse(_);
-	if (f) _=f(_);
-	if (d) d(((xupl_*)_)->doc);
+	if (f) _ = f(_);
+	if (d) d(((xupl_*) _)->doc);
 	xupl_done(_);
 }
